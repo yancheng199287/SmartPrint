@@ -1,0 +1,184 @@
+#![cfg_attr(
+all(not(debug_assertions), target_os = "windows"),
+windows_subsystem = "windows"
+)]
+
+use windows::Win32::UI::WindowsAndMessaging::*;
+use windows::Win32::System::LibraryLoader::GetModuleHandleA;
+use windows::core::PCSTR;
+use windows::Win32::Foundation::*;
+use std::ffi::CString;
+
+// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+#[tauri::command]
+fn greet(name: &str) -> String {
+    format!("Hello, {}! You've been greeted from Rust!", name)
+}
+
+
+extern "system" fn keyboard_callback(ncode: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
+    unsafe {
+        if wparam.0 as u32 == WM_KEYDOWN && ncode as u32 == HC_ACTION {
+            let vk_code_inner = &*(lparam.0 as *const u16) as &u16;
+            dbg!(vk_code_inner);
+        }
+
+        CallNextHookEx(HHOOK::default(), ncode, wparam, lparam)
+    }
+}
+
+extern "system" fn mouse_callback(ncode: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
+    unsafe {
+        // https://learn.microsoft.com/zh-cn/windows/win32/inputdev/about-mouse-input
+        let event_result = ncode as u32;
+        let mouse_event_type = wparam.0 as u32;
+        if event_result == HC_ACTION {
+            match mouse_event_type {
+                WM_LBUTTONDBLCLK => {
+                    println!("双击鼠标左键")
+                }
+                WM_LBUTTONDOWN => {
+                    println!("鼠标左键按下")
+                }
+                WM_LBUTTONUP => {
+                    println!("鼠标左键释放")
+                }
+                WM_RBUTTONDOWN => {
+                    println!("鼠标右键按下")
+                }
+                WM_RBUTTONDOWN => {
+                    println!("鼠标右键释放")
+                }
+                _ => {}
+            }
+        }
+        if wparam.0 as u32 == WM_LBUTTONDOWN && ncode as u32 == HC_ACTION {
+            let vk_code_inner = &*(lparam.0 as *const u16) as &u16;
+            dbg!(vk_code_inner);
+        }
+        CallNextHookEx(HHOOK::default(), ncode, wparam, lparam)
+    }
+}
+
+#[tauri::command]
+fn msg_box() {
+    unsafe {
+        // 鼠标
+        let mouse_callback_hook: HHOOK = SetWindowsHookExA(WH_MOUSE_LL, Some(mouse_callback), HINSTANCE::default(), 0).ok().unwrap();
+        //键盘，热键有其他API
+        let keyboard_callback_hook: HHOOK = SetWindowsHookExA(WH_KEYBOARD_LL, Some(keyboard_callback), HINSTANCE::default(), 0).ok().unwrap();
+
+        let mut message = MSG::default();
+
+        while GetMessageA(&mut message, HWND::default(), 0, 0).into() {
+            DispatchMessageA(&message);
+        }
+        if !mouse_callback_hook.is_invalid() {
+            UnhookWindowsHookEx(mouse_callback_hook);
+        }
+        if !keyboard_callback_hook.is_invalid() {
+            UnhookWindowsHookEx(keyboard_callback_hook);
+        }
+        println!("result_code is less than 0, error");
+    }
+}
+
+
+fn main() {
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![greet,msg_box])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+#![cfg_attr(
+all(not(debug_assertions), target_os = "windows"),
+windows_subsystem = "windows"
+)]
+
+use windows::Win32::UI::WindowsAndMessaging::*;
+use windows::Win32::System::LibraryLoader::GetModuleHandleA;
+use windows::core::PCSTR;
+use windows::Win32::Foundation::*;
+use std::ffi::CString;
+
+// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+#[tauri::command]
+fn greet(name: &str) -> String {
+    format!("Hello, {}! You've been greeted from Rust!", name)
+}
+
+
+extern "system" fn keyboard_callback(ncode: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
+    unsafe {
+        if wparam.0 as u32 == WM_KEYDOWN && ncode as u32 == HC_ACTION {
+            let vk_code_inner = &*(lparam.0 as *const u16) as &u16;
+            dbg!(vk_code_inner);
+        }
+
+        CallNextHookEx(HHOOK::default(), ncode, wparam, lparam)
+    }
+}
+
+extern "system" fn mouse_callback(ncode: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
+    unsafe {
+        // https://learn.microsoft.com/zh-cn/windows/win32/inputdev/about-mouse-input
+        let event_result = ncode as u32;
+        let mouse_event_type = wparam.0 as u32;
+        if event_result == HC_ACTION {
+            match mouse_event_type {
+                WM_LBUTTONDBLCLK => {
+                    println!("双击鼠标左键")
+                }
+                WM_LBUTTONDOWN => {
+                    println!("鼠标左键按下")
+                }
+                WM_LBUTTONUP => {
+                    println!("鼠标左键释放")
+                }
+                WM_RBUTTONDOWN => {
+                    println!("鼠标右键按下")
+                }
+                WM_RBUTTONDOWN => {
+                    println!("鼠标右键释放")
+                }
+                _ => {}
+            }
+        }
+        if wparam.0 as u32 == WM_LBUTTONDOWN && ncode as u32 == HC_ACTION {
+            let vk_code_inner = &*(lparam.0 as *const u16) as &u16;
+            dbg!(vk_code_inner);
+        }
+        CallNextHookEx(HHOOK::default(), ncode, wparam, lparam)
+    }
+}
+
+#[tauri::command]
+fn msg_box() {
+    unsafe {
+        // 鼠标
+        let mouse_callback_hook: HHOOK = SetWindowsHookExA(WH_MOUSE_LL, Some(mouse_callback), HINSTANCE::default(), 0).ok().unwrap();
+        //键盘，热键有其他API
+        let keyboard_callback_hook: HHOOK = SetWindowsHookExA(WH_KEYBOARD_LL, Some(keyboard_callback), HINSTANCE::default(), 0).ok().unwrap();
+
+        let mut message = MSG::default();
+
+        while GetMessageA(&mut message, HWND::default(), 0, 0).into() {
+            DispatchMessageA(&message);
+        }
+        if !mouse_callback_hook.is_invalid() {
+            UnhookWindowsHookEx(mouse_callback_hook);
+        }
+        if !keyboard_callback_hook.is_invalid() {
+            UnhookWindowsHookEx(keyboard_callback_hook);
+        }
+        println!("result_code is less than 0, error");
+    }
+}
+
+
+fn main() {
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![greet,msg_box])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
